@@ -93,4 +93,18 @@
 - [x] Audit the entry point and every local asset reference for base-path compatibility.
 - [x] Run the production build and inspect `landing/dist/index.html` and generated assets.
 - [x] Commit the validated base-path fix only on `throttle-landing`.
-- [ ] Verify the deployed GitHub Pages site after branch sync and the GitHub Actions redeployment.
+- [x] Verify the deployed GitHub Pages site after branch sync and the GitHub Actions redeployment.
+
+## Product experience redesign
+
+- [x] Replace text-led features with a dashboard hero and five interactive concept screens.
+- [x] Add the rider-day timeline, Indian ownership section and Google Form conversion sections.
+- [x] Verify demo calculations, all interactions, desktop/mobile layouts and production asset paths.
+- [x] Commit only on throttle-landing; deployment runs after platform branch sync.
+
+### Validation
+
+- Standalone production build passes; JavaScript, CSS, favicon and all photos use `/remix-of-archive-to-canvas/`.
+- Three fuel-rule tests pass. Browser checks pass at 1440, 768, 390 and 320 px: all five tabs, keyboard navigation, fuel save/calculation/history, maintenance checklist/timeline/costs, three map pins, reaction/comment, state retained across tabs and reset on refresh.
+- All five waitlist CTAs opened the real Google Form in new tabs. No console errors, failed responses or page-level horizontal overflow.
+- Previous deployed base-path fix verified live; this redesign awaits the automatic branch sync and GitHub Actions deployment after the final reply.

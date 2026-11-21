@@ -79,3 +79,10 @@
 - Fixed during audit: settings email field now re-syncs after localStorage hydrates.
 - 78 unit tests pass (13 new profile tests); typecheck clean; build OK; Playwright audit 11/11 across all six routes, both themes, 390px + 1280px; no console errors; no horizontal overflow.
 - Outstanding: real auth, password recovery, cross-device sync and push notifications require Lovable Cloud (user chose local-only).
+
+# Landing page (isolated static site, branch throttle-landing)
+
+- [x] Standalone Vite + React landing page in temporary storage; UK app on main untouched.
+- [x] Waitlist CTAs wired to the user's Google Form (https://forms.gle/ReHDbrUMgkd4TCYAA), new tab, noreferrer.
+- [ ] Apply the page to the `throttle-landing` branch once the user switches the project to it.
+- [x] Footer keeps Instagram and contact-email placeholders, exactly as the brief specifies.

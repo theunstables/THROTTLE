@@ -13,4 +13,4 @@
 - Prototype persistence goes through useLocalStorage (keys prefixed `throttle:`) — SSR-safe and resettable in one place.
 - App shell (SideNav desktop, BottomNav mobile) lives in __root around <Outlet /> — one nav for all pages.
 - Keep the theme hook module's refresh-reset directive — live updates must remount consumers rather than reuse stale hook order.
-- The landing page is an isolated static Vite + React site in `landing/` with base `/THROTTLE/`; keep it independent of the TanStack Start app so GitHub Pages can deploy it without backend services.
+- The landing page is an isolated static Vite + React site in `landing/` with base `/remix-of-archive-to-canvas/`; keep it independent of the TanStack Start app so GitHub Pages can deploy it without backend services.

@@ -9,7 +9,7 @@ bun install
 bun run dev
 ```
 
-Open the local URL printed by Vite under the `/THROTTLE/` base path.
+Open the local URL printed by Vite under the `/remix-of-archive-to-canvas/` base path.
 
 ## Production build
 
@@ -18,7 +18,7 @@ bun run build
 bun run preview
 ```
 
-The deployable static output is `landing/dist`. The Vite base path is `/THROTTLE/` for the `THROTTLE` GitHub repository.
+The deployable static output is `landing/dist`. The Vite base path is `/remix-of-archive-to-canvas/` for the `remix-of-archive-to-canvas` GitHub repository.
 
 ## Waitlist and footer configuration
 

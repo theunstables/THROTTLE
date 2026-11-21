@@ -86,3 +86,11 @@
 - [x] Waitlist CTAs wired to the user's Google Form (https://forms.gle/ReHDbrUMgkd4TCYAA), new tab, noreferrer.
 - [x] Apply the page to the `throttle-landing` branch once the user switches the project to it.
 - [x] Footer keeps Instagram and contact-email placeholders, exactly as the brief specifies.
+
+## GitHub Pages base-path fix
+
+- [x] Change the landing-site base from `/THROTTLE/` to `/remix-of-archive-to-canvas/`.
+- [x] Audit the entry point and every local asset reference for base-path compatibility.
+- [x] Run the production build and inspect `landing/dist/index.html` and generated assets.
+- [x] Commit the validated base-path fix only on `throttle-landing`.
+- [ ] Verify the deployed GitHub Pages site after branch sync and the GitHub Actions redeployment.

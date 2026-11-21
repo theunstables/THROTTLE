@@ -84,5 +84,5 @@
 
 - [x] Standalone Vite + React landing page in temporary storage; UK app on main untouched.
 - [x] Waitlist CTAs wired to the user's Google Form (https://forms.gle/ReHDbrUMgkd4TCYAA), new tab, noreferrer.
-- [ ] Apply the page to the `throttle-landing` branch once the user switches the project to it.
+- [x] Apply the page to the `throttle-landing` branch once the user switches the project to it.
 - [x] Footer keeps Instagram and contact-email placeholders, exactly as the brief specifies.

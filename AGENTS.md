@@ -14,4 +14,4 @@
 - App shell (SideNav desktop, BottomNav mobile) lives in __root around <Outlet /> — one nav for all pages.
 - Keep the theme hook module's refresh-reset directive — live updates must remount consumers rather than reuse stale hook order.
 - The landing page is an isolated static Vite + React site in `landing/` with base `/remix-of-archive-to-canvas/`; keep it independent of the TanStack Start app so GitHub Pages can deploy it without backend services.
-- Landing product previews share local React state in ProductPreview and browser-safe sample data in demo.ts; never import the main app or persist visitor demo interactions, so concept screens remain isolated and reset on refresh.
+- Each landing feature owns an adjacent, self-contained preview with local React state and browser-safe sample data in demo.ts; never import the main app or persist visitor interactions, so no distant tabs or shared demo state can confuse visitors.

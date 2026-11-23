@@ -82,6 +82,18 @@
 
 # Landing page (isolated static site, branch throttle-landing)
 
+## Complete editorial redesign
+- [x] Replace distant tabs and repeated rider-day sections with nine connected sections and self-contained demos.
+- [x] Verify fuel, maintenance, garage timeline, illustrative map, community and reset actions.
+- [x] Test 360/390/430/tablet/1366/1920 widths, waitlist links, production assets and commit on throttle-landing.
+- [ ] Verify updated GitHub Pages deployment after automatic branch sync (requires post-turn deployment).
+
+### Complete redesign validation
+- Seven rule tests pass; standalone production build passes with correct base-prefixed JS, CSS, favicon and images.
+- All demos pass at 360, 390, 430, 768, 1366 and 1920 px; no horizontal overflow, clipped horizontal controls, browser errors or failed local asset responses.
+- Four waitlist links (header plus three requested conversion placements) preserve the Google Form URL and new-tab behaviour; actual form popup verified.
+- Main app, backend, Vite base and Pages workflow unchanged. Live site currently serves previous asset hashes; this commit requires automatic platform sync before GitHub Actions can deploy.
+
 - [x] Standalone Vite + React landing page in temporary storage; UK app on main untouched.
 - [x] Waitlist CTAs wired to the user's Google Form (https://forms.gle/ReHDbrUMgkd4TCYAA), new tab, noreferrer.
 - [x] Apply the page to the `throttle-landing` branch once the user switches the project to it.

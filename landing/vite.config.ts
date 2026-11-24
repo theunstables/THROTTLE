@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/remix-of-archive-to-canvas/",
+  base: "/THROTTLE/",
   build: {
     outDir: "dist",
     emptyOutDir: true,

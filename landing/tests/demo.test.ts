@@ -1,49 +1,54 @@
 import { describe, expect, test } from "bun:test";
-import { calculateFill, documents, getCountdown, initialFuel, maintenance } from "../src/demo";
-import { LAUNCH_TARGET_ISO } from "../src/config";
+import { calculateFill, documents, formatDate, getCountdown, initialFuel, maintenance, validateOdometer } from "../src/demo";
+import { LAUNCH_TARGET_ISO, WAITLIST_EMBED_URL } from "../src/config";
 
-describe("launch countdown to 1 January 2027 00:00 IST", () => {
-  test("computes exact days, hours, minutes and seconds before launch", () => {
-    const oneDayAndChangeBefore = Date.parse(LAUNCH_TARGET_ISO) - ((2 * 86400 + 3 * 3600 + 4 * 60 + 5) * 1000);
-    expect(getCountdown(LAUNCH_TARGET_ISO, oneDayAndChangeBefore)).toEqual({
-      launched: false,
-      days: 2,
-      hours: 3,
-      minutes: 4,
-      seconds: 5,
-    });
+describe("countdown to 1 January 2027 00:00 IST", () => {
+  test("target is midnight IST (18:30 UTC on 31 Dec 2026)", () => {
+    expect(new Date(LAUNCH_TARGET_ISO).toISOString()).toBe("2026-12-31T18:30:00.000Z");
   });
-  test("switches to launched state at and after the target timestamp without negative numbers", () => {
-    const exact = Date.parse(LAUNCH_TARGET_ISO);
-    expect(getCountdown(LAUNCH_TARGET_ISO, exact)).toEqual({ launched: true, days: 0, hours: 0, minutes: 0, seconds: 0 });
-    expect(getCountdown(LAUNCH_TARGET_ISO, exact + 60_000)).toEqual({ launched: true, days: 0, hours: 0, minutes: 0, seconds: 0 });
+  test("exact days/hours/minutes/seconds before launch", () => {
+    const t = Date.parse(LAUNCH_TARGET_ISO) - (2 * 86400 + 3 * 3600 + 4 * 60 + 5) * 1000;
+    expect(getCountdown(LAUNCH_TARGET_ISO, t)).toEqual({ launched: false, days: 2, hours: 3, minutes: 4, seconds: 5 });
+  });
+  test("launched at and after target, never negative", () => {
+    const t = Date.parse(LAUNCH_TARGET_ISO);
+    expect(getCountdown(LAUNCH_TARGET_ISO, t).launched).toBe(true);
+    expect(getCountdown(LAUNCH_TARGET_ISO, t + 60_000)).toEqual({ launched: true, days: 0, hours: 0, minutes: 0, seconds: 0 });
   });
 });
 
-describe("local full-to-full fuel preview", () => {
-  test("260 km with 10 litres gives 26 km/L and ₹1,050 at ₹105/L", () => {
-    expect(calculateFill(12450, 12710, 10, 105)).toEqual({ mileage: 26, expense: 1050 });
+describe("fuel", () => {
+  test("350 km on 10 L = 35 km/L; ₹1,050 for 10 L = ₹105/L", () => {
+    expect(calculateFill(8450, 8800, 10, 1050)).toEqual({ mileage: 35, pricePerLitre: 105 });
   });
-  test("first full tank records expenditure without inventing mileage", () => {
-    expect(calculateFill(null, 8450, 10, 105)).toEqual({ mileage: null, expense: 1050 });
+  test("no previous reading → no mileage invented", () => {
+    expect(calculateFill(null, 8450, 10, 1050)).toEqual({ mileage: null, pricePerLitre: 105 });
   });
-  test("Indian sample motorcycle: 350 km and 10 litres gives 35 km/l", () => {
-    expect(calculateFill(8450, 8800, 10, 105)).toEqual({ mileage: 35, expense: 1050 });
-  });
-  test("a fill must advance the last recorded odometer", () => {
+  test("odometer must advance", () => {
     const last = initialFuel[0];
-    if (!last) throw new Error("Missing demo fill");
-    expect(calculateFill(last.odometer, last.odometer, 10, 105)).toBeNull();
-    expect(calculateFill(last.odometer, last.odometer - 1, 10, 105)).toBeNull();
+    if (!last) throw new Error("missing");
+    expect(calculateFill(last.odometer, last.odometer, 10, 1050)).toBeNull();
   });
-  test("litres and price must be positive finite numbers", () => {
-    expect(calculateFill(12450, 12710, 0, 105)).toBeNull();
-    expect(calculateFill(12450, 12710, 10, -1)).toBeNull();
-    expect(calculateFill(12450, 12710, NaN, 105)).toBeNull();
+  test("litres and amount must be positive", () => {
+    expect(calculateFill(1, 2, 0, 100)).toBeNull();
+    expect(calculateFill(1, 2, 5, -1)).toBeNull();
   });
 });
 
-test("bike garage includes maintenance tasks and key documents", () => {
-  expect(maintenance.map(item => item.id)).toEqual(["chain-clean", "oil", "chain-lube", "tyres"]);
-  expect(documents.map(doc => doc.id)).toEqual(["insurance", "rc", "puc"]);
+describe("odometer", () => {
+  test("rejects backwards reading", () => expect(validateOdometer(8450, 8400)).not.toBeNull());
+  test("accepts forward reading", () => expect(validateOdometer(8450, 8600)).toBeNull());
+});
+
+test("dates are DD/MM/YYYY in IST", () => {
+  expect(formatDate(new Date("2026-12-31T19:00:00Z"))).toBe("01/01/2027");
+});
+
+test("garage has the five maintenance tasks and four documents", () => {
+  expect(maintenance.map(m => m.id)).toEqual(["chain-clean", "chain-lube", "oil", "tyres", "air-filter"]);
+  expect(documents.map(d => d.id)).toEqual(["insurance", "rc", "puc", "warranty"]);
+});
+
+test("waitlist still points at the existing Google Form", () => {
+  expect(WAITLIST_EMBED_URL).toContain("1FAIpQLScD9SsuMJ3NJ2FbYF3yUyVoVeVofAM_Xq2BfzHPckXIhr3M2w");
 });

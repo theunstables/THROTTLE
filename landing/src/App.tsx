@@ -1,305 +1,240 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { ArrowDown, ArrowRight, ArrowUpRight, Gauge, Menu, X } from "lucide-react";
-import motorcycle from "./assets/classic-350.webp";
-import indiaRoad from "./assets/india-road.webp";
-import { LAUNCH_TARGET_ISO, WAITLIST_EMBED_URL, WAITLIST_FORM_URL } from "./config";
-import { getCountdown } from "./demo";
-import { BikeGarageDemo, CommunityFeatureDemo, FuelFeatureDemo } from "./ProductPreview";
-import { Button, WaitlistButton } from "./ui";
+import { useEffect, useRef, useState } from "react";
+import { ArrowDown, ArrowRight, Menu, X, Wrench, Fuel, Users, Gauge, MessageSquarePlus } from "lucide-react";
+import hero from "./assets/hero-ghats.webp";
+import closing from "./assets/closing-riders.webp";
+import { LAUNCH_TARGET_ISO, WAITLIST_EMBED_URL } from "./config";
 
-const navigation = [
-  { label: "What is THROTTLE", href: "#what-is-throttle" },
-  { label: "Bike Garage", href: "#garage" },
-  { label: "Community", href: "#community" },
-  { label: "Fuel", href: "#fuel" },
-];
+const WAITLIST_VIEW_URL = WAITLIST_EMBED_URL.replace("?embedded=true", "");
+import { getCountdown, pad } from "./demo";
+import { CommunityPreview, FuelPreview, GaragePreview } from "./ProductPreview";
 
-const benefits = [
-  { num: "01", title: "Know your motorcycle better.", detail: "Keep your bike profile, odometer and key documents organised in one place." },
-  { num: "02", title: "Stay ahead of maintenance.", detail: "Stay ahead of avoidable maintenance surprises with clear kilometre intervals." },
-  { num: "03", title: "Connect with riders and discover rides.", detail: "Share stories, join upcoming group rides and find riding communities." },
-  { num: "04", title: "Understand your fuel expenses and mileage.", detail: "Turn every full tank into a transparent km/l and rupee cost log." },
-];
+const FEEDBACK_ENTRY = "entry.1393558069"; // "Feedback or Suggestions" field on the existing waitlist form
 
-function Brand() {
+function AnnouncementBar() {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  const c = getCountdown(LAUNCH_TARGET_ISO, now ?? 0);
   return (
-    <a className="brand" href="#top" aria-label="THROTTLE home">
-      <Gauge size={24} />
-      <span>THROTTLE</span>
-    </a>
+    <div className="announce" role="timer" aria-live="off">
+      <div className="container announce-inner">
+        {now !== null && c.launched ? (
+          <span className="announce-launch">THROTTLE IS HERE · LAUNCH DAY, 01/01/2027</span>
+        ) : (
+          <>
+            <span className="announce-label">The wait ends in</span>
+            <span className="announce-clock" aria-label={`${c.days} days ${c.hours} hours ${c.minutes} minutes ${c.seconds} seconds`}>
+              {now === null ? "-- : -- : -- : --" : <>{pad(c.days)}<i>D</i> : {pad(c.hours)}<i>H</i> : {pad(c.minutes)}<i>M</i> : {pad(c.seconds)}<i>S</i></>}
+            </span>
+            <span className="announce-date">1 January 2027</span>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
+const nav = [{ href: "#home", label: "Home" }, { href: "#features", label: "Features" }, { href: "#about", label: "About" }];
+
 function Header() {
   const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const close = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", close);
-    return () => window.removeEventListener("keydown", close);
-  }, []);
   return (
     <header className="site-header">
       <div className="container header-inner">
-        <Brand />
-        <nav className="desktop-nav" aria-label="Main navigation">
-          {navigation.map(item => (
-            <a key={item.href} href={item.href}>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-        <WaitlistButton className="header-cta">Join Waitlist</WaitlistButton>
-        <Button
-          className="menu-toggle"
-          aria-label={open ? "Close navigation menu" : "Open navigation menu"}
-          aria-controls="mobile-navigation"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open ? <X size={21} /> : <Menu size={21} />}
-        </Button>
+        <a href="#home" className="brand" aria-label="THROTTLE home"><Gauge size={22} aria-hidden="true" />THROTTLE</a>
+        <nav className="desktop-nav" aria-label="Main">{nav.map(n => <a key={n.href} href={n.href}>{n.label}</a>)}</nav>
+        <a href="#waitlist" className="button button--small header-cta">Join waitlist</a>
+        <button type="button" className="menu-toggle" aria-expanded={open} aria-controls="mobile-nav" aria-label={open ? "Close menu" : "Open menu"} onClick={() => setOpen(o => !o)}>
+          {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+        </button>
       </div>
       {open && (
-        <nav id="mobile-navigation" className="mobile-nav container" aria-label="Mobile navigation">
-          {navigation.map(item => (
-            <a key={item.href} href={item.href} onClick={() => setOpen(false)}>
-              {item.label}
-              <ArrowRight size={18} />
-            </a>
-          ))}
+        <nav id="mobile-nav" className="mobile-nav container" aria-label="Mobile">
+          {[...nav, { href: "#waitlist", label: "Join waitlist" }].map(n => <a key={n.href} href={n.href} onClick={() => setOpen(false)}>{n.label}<ArrowRight size={16} aria-hidden="true" /></a>)}
         </nav>
       )}
     </header>
   );
 }
 
-function LaunchCountdown() {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-  const state = getCountdown(LAUNCH_TARGET_ISO, now);
-
-  if (state.launched) {
-    return (
-      <div className="countdown countdown--launched" role="status">
-        <p className="countdown-label">LAUNCH DAY · 1 JANUARY 2027</p>
-        <strong>THE RIDE HAS BEGUN.</strong>
-      </div>
-    );
-  }
-
-  const units = [
-    { value: String(state.days).padStart(2, "0"), label: "Days" },
-    { value: String(state.hours).padStart(2, "0"), label: "Hours" },
-    { value: String(state.minutes).padStart(2, "0"), label: "Minutes" },
-    { value: String(state.seconds).padStart(2, "0"), label: "Seconds" },
-  ];
-
+function Hero() {
   return (
-    <div className="countdown" aria-label="Countdown to 1 January 2027 00:00 IST">
-      <p className="countdown-label">THE WAIT ENDS IN</p>
-      <div className="countdown-grid">
-        {units.map(unit => (
-          <div className="countdown-unit" key={unit.label}>
-            <strong>{unit.value}</strong>
-            <span>{unit.label}</span>
-          </div>
-        ))}
+    <section id="home" className="hero">
+      <img className="hero-img" src={hero} alt="A rider on a motorcycle climbing a misty ghat road at sunrise" width={1920} height={1088} fetchPriority="high" />
+      <div className="hero-shade" aria-hidden="true" />
+      <div className="container hero-content">
+        <p className="eyebrow eyebrow--lime">Built for Indian riders</p>
+        <h1>Your motorcycle is more than a machine. <em>Ownership should feel just as good.</em></h1>
+        <p className="hero-copy">Keeping track of maintenance, servicing, documents, fuel expenses and fellow riders shouldn't be complicated. THROTTLE brings your motorcycle ownership essentials together in one place.</p>
+        <p className="hero-value">Manage your motorcycle. Track every expense. Find your riding community.</p>
+        <div className="hero-actions">
+          <a href="#features" className="button button--ghost">Explore features<ArrowDown size={16} aria-hidden="true" /></a>
+          <a href="#waitlist" className="button">Join the waitlist<ArrowRight size={16} aria-hidden="true" /></a>
+        </div>
       </div>
-      <p className="countdown-date">1 January 2027 · 00:00 IST</p>
-    </div>
+    </section>
   );
 }
 
-function Feature({
-  id,
-  eyebrow,
-  title,
-  what,
-  why,
-  children,
-  className = "",
-}: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  what: string;
-  why: string;
-  children: ReactNode;
-  className?: string;
-}) {
+function Intro() {
+  const items = [
+    { icon: Wrench, title: "Manage your garage", text: "Maintenance, servicing, documents and odometer — one place." },
+    { icon: Fuel, title: "Know your costs", text: "Log every fill-up and understand your real mileage." },
+    { icon: Users, title: "Ride together", text: "Find riders, communities and upcoming rides near you." },
+  ];
   return (
-    <section id={id} className={`feature-section ${className}`} aria-labelledby={`${id}-title`}>
-      <div className="container feature-layout">
-        <div className="feature-copy">
-          <p className="eyebrow">{eyebrow}</p>
-          <h2 id={`${id}-title`}>{title}</h2>
-          <p className="feature-what">{what}</p>
-          <div className="why-block">
-            <span>WHY IT MATTERS</span>
-            <p>{why}</p>
-          </div>
+    <section id="about" className="intro">
+      <div className="container intro-grid">
+        <div>
+          <p className="eyebrow">What is THROTTLE</p>
+          <h2 className="display-md">A motorcycle ownership companion.</h2>
+          <p className="lead">THROTTLE is designed to help riders manage their garage, stay on top of maintenance, understand fuel expenses and connect with fellow motorcycle enthusiasts.</p>
         </div>
-        <div className="feature-demo">{children}</div>
+        <ol className="pillars">
+          {items.map((i, n) => (
+            <li key={i.title}><span className="pillar-num">0{n + 1}</span><i.icon size={22} aria-hidden="true" /><div><h3>{i.title}</h3><p>{i.text}</p></div></li>
+          ))}
+        </ol>
       </div>
     </section>
+  );
+}
+
+type Feature = "garage" | "fuel" | "community";
+const features: { id: Feature; label: string; headline: string; text: string; why: string }[] = [
+  { id: "garage", label: "My Garage", headline: "Your motorcycle, fully organised.", text: "Maintenance, servicing, documents and odometer — everything your motorcycle needs, in one garage.", why: "Stay ahead of your motorcycle instead of chasing paperwork and reminders." },
+  { id: "fuel", label: "Fuel & Maps", headline: "Know what every ride costs.", text: "Track your fuel expenses, understand your motorcycle's mileage and explore fuel stops through maps.", why: "Understand where your money goes and make every kilometre count." },
+  { id: "community", label: "Community", headline: "More than a motorcycle. A community.", text: "Discover riders, share experiences, find communities and explore upcoming rides.", why: "Because some of the best motorcycle memories begin with the people you meet along the way." },
+];
+
+function Features() {
+  const [active, setActive] = useState<Feature>("garage");
+  const f = features.find(x => x.id === active) ?? features[0]!;
+  return (
+    <section id="features" className="features">
+      <div className="container">
+        <div className="features-head">
+          <p className="eyebrow eyebrow--lime">Try it yourself</p>
+          <h2 className="display-md">Three things every rider needs.</h2>
+          <p className="features-hint">Tap a feature, then use the phone — these are live, interactive previews with sample data.</p>
+        </div>
+        <div className="feature-nav" role="tablist" aria-label="THROTTLE features">
+          {features.map((x, i) => (
+            <button key={x.id} type="button" role="tab" id={`tab-${x.id}`} aria-controls="feature-panel" aria-selected={active === x.id} className={active === x.id ? "is-active" : ""} onClick={() => setActive(x.id)}>
+              <span className="fn-num">0{i + 1}</span>{x.label}
+            </button>
+          ))}
+        </div>
+        <div id="feature-panel" role="tabpanel" aria-labelledby={`tab-${active}`} className="feature-stage">
+          <div className="feature-copy" key={f.id}>
+            <h3>{f.headline}</h3>
+            <p>{f.text}</p>
+            <p className="feature-why"><strong>Why it matters</strong>{f.why}</p>
+          </div>
+          <div className="feature-device">
+            {active === "garage" && <GaragePreview />}
+            {active === "fuel" && <FuelPreview />}
+            {active === "community" && <CommunityPreview />}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Closing() {
+  return (
+    <section className="closing">
+      <img src={closing} alt="A group of riders with headlights on at a Himalayan pass at sunset" loading="lazy" width={1920} height={1088} />
+      <div className="closing-shade" aria-hidden="true" />
+      <div className="container closing-content">
+        <h2>Every ride has a story. <em>Let's make ownership better, together.</em></h2>
+        <p>Every kilometre has a memory. Every motorcycle has a journey. And every rider deserves a better ownership experience.</p>
+        <p>THROTTLE is being built for people who live for the ride. We're building this with riders, for riders. Be part of the journey from day one.</p>
+        <div className="hero-actions">
+          <a href="#waitlist" className="button">Join the waitlist<ArrowRight size={16} aria-hidden="true" /></a>
+          <a href="#feedback" className="button button--ghost">Share your ideas<MessageSquarePlus size={16} aria-hidden="true" /></a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function JoinSection() {
+  const [embed, setEmbed] = useState(WAITLIST_EMBED_URL);
+  const [a, setA] = useState({ features: "", problem: "", ideas: "" });
+  const [added, setAdded] = useState(false);
+  const [prefill, setPrefill] = useState("");
+  const formRef = useRef<HTMLDivElement>(null);
+  const hasText = Object.values(a).some(v => v.trim());
+  const addToForm = () => {
+    const text = [
+      a.features.trim() && `Features I'd like: ${a.features.trim()}`,
+      a.problem.trim() && `Ownership problem to solve: ${a.problem.trim()}`,
+      a.ideas.trim() && `Ideas: ${a.ideas.trim()}`,
+    ].filter(Boolean).join("\n\n");
+    const q = `${FEEDBACK_ENTRY}=${encodeURIComponent(text)}`;
+    setPrefill(q);
+    setEmbed(`${WAITLIST_EMBED_URL}&${q}`);
+    setAdded(true);
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  return (
+    <section className="join">
+      <div className="container join-grid">
+        <div id="waitlist" className="join-card join-card--dark" ref={formRef}>
+          <p className="eyebrow eyebrow--lime">Early access</p>
+          <h2 className="display-sm">Join the waitlist.</h2>
+          <p className="join-copy">Be among the first riders to use THROTTLE when it launches on 1 January 2027.</p>
+          {added && <p className="join-added" role="status">Your ideas are filled into the "Feedback or Suggestions" box below. Complete the form and press Submit to send them.</p>}
+          <div className="form-frame">
+            <iframe key={embed} src={embed} title="THROTTLE waitlist form (Google Forms)" loading="lazy">Loading…</iframe>
+          </div>
+          <p className="fine fine--inverse">Secure form by Google Forms. Your confirmation appears here once Google accepts your response.</p>
+          <a className="frame-fallback" href={prefill ? `${WAITLIST_VIEW_URL}?usp=pp_url&${prefill}` : WAITLIST_VIEW_URL} target="_blank" rel="noopener noreferrer">Form asking you to sign in, or not loading? Open it in a new tab<ArrowRight size={14} aria-hidden="true" /></a>
+        </div>
+        <div id="feedback" className="join-card">
+          <p className="eyebrow">Build it with us</p>
+          <h2 className="display-sm">What should we build next?</h2>
+          <p className="join-copy">THROTTLE is being built for riders. Tell us what we're missing, what you would love to see and how we can make it better.</p>
+          <form className="feedback-form" onSubmit={e => { e.preventDefault(); if (hasText) addToForm(); }}>
+            <label><span>What additional features would you like to see in THROTTLE?</span><textarea rows={2} value={a.features} onChange={e => setA({ ...a, features: e.target.value })} /></label>
+            <label><span>What is one motorcycle ownership problem you wish could be solved?</span><textarea rows={2} value={a.problem} onChange={e => setA({ ...a, problem: e.target.value })} /></label>
+            <label><span>Any ideas or suggestions to improve THROTTLE?</span><textarea rows={2} value={a.ideas} onChange={e => setA({ ...a, ideas: e.target.value })} /></label>
+            <button type="submit" className="button" disabled={!hasText}>Add my ideas to the form<ArrowRight size={16} aria-hidden="true" /></button>
+            <p className="fine">Feedback is sent through the same THROTTLE Google Form, in its "Feedback or Suggestions" field. Agreeing to updates in that form is optional.</p>
+          </form>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="container footer-inner">
+        <span className="brand"><Gauge size={18} aria-hidden="true" />THROTTLE</span>
+        <span>Built in India, for riders. All previews use illustrative sample data.</span>
+        <span>© 2026 THROTTLE</span>
+      </div>
+    </footer>
   );
 }
 
 export default function App() {
   return (
     <>
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
+      <a href="#main" className="skip-link">Skip to content</a>
+      <AnnouncementBar />
       <Header />
-      <main id="main-content">
-        <section className="hero" id="top" aria-labelledby="hero-title">
-          <img
-            className="hero-image"
-            src={motorcycle}
-            alt="Royal Enfield Classic 350 parked beside a roadside café in India"
-            fetchPriority="high"
-          />
-          <div className="hero-shade" />
-          <div className="container hero-content">
-            <p className="eyebrow">THROTTLE</p>
-            <h1 id="hero-title">
-              THE WAIT ENDS.
-              <br />
-              <em>THE RIDE BEGINS.</em>
-            </h1>
-            <p className="hero-description">
-              Your motorcycle deserves more than just a garage. A better way to own, maintain and experience every ride is coming.
-            </p>
-            <LaunchCountdown />
-            <div className="hero-actions">
-              <WaitlistButton>JOIN THE WAITLIST</WaitlistButton>
-              <a className="explore-link" href="#what-is-throttle">
-                EXPLORE THROTTLE
-                <ArrowDown size={18} />
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <section className="intro-section" id="what-is-throttle" aria-labelledby="intro-title">
-          <div className="container intro-grid">
-            <div className="intro-lead">
-              <p className="eyebrow">WHAT IS THROTTLE</p>
-              <h2 id="intro-title">
-                One motorcycle.
-                <br />
-                <em>One home for everything.</em>
-              </h2>
-              <p className="intro-copy">
-                THROTTLE is a motorcycle ownership companion designed to bring your bike’s garage, maintenance records, rider community and fuel
-                expenses together in one place.
-              </p>
-              <figure className="intro-photo">
-                <img src={indiaRoad} alt="The winding Gata Loops on the Leh–Manali Highway in Ladakh, India" loading="lazy" />
-                <figcaption>
-                  <span>LADAKH, INDIA</span>
-                  <a
-                    href="https://commons.wikimedia.org/wiki/File:Gata_Loops,Leh_Manali_Highway.jpg"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Narender9 · CC BY-SA 4.0
-                    <ArrowUpRight size={13} />
-                  </a>
-                </figcaption>
-              </figure>
-            </div>
-            <ol className="benefit-list">
-              {benefits.map(item => (
-                <li key={item.num}>
-                  <span>{item.num}</span>
-                  <div>
-                    <h3>{item.title}</h3>
-                    <p>{item.detail}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <Feature
-          id="garage"
-          eyebrow="01 / BIKE GARAGE"
-          title="Your motorcycle. Your records. All in one garage."
-          what="Bike Garage keeps your motorcycle profile, odometer updates, upcoming maintenance tasks, servicing history and essential documents organised in one place."
-          why="Your bike’s important information should never be scattered across notes, messages and forgotten paperwork."
-        >
-          <BikeGarageDemo />
-        </Feature>
-
-        <Feature
-          id="community"
-          eyebrow="02 / RIDER COMMUNITY"
-          title="More than a motorcycle. A community."
-          what="THROTTLE brings motorcycle enthusiasts together — share ride stories, discover upcoming group rides and join touring, weekend and wrenching communities."
-          why="Great rides are better when you have people who know the roads, the stops and the bikes worth talking about."
-          className="dark-section"
-        >
-          <CommunityFeatureDemo />
-        </Feature>
-
-        <Feature
-          id="fuel"
-          eyebrow="03 / FUEL & MILEAGE"
-          title="Know your mileage. Control your fuel expenses."
-          what="Record a full tank in seconds and see your exact fuel expenditure in rupees alongside transparent full-to-full km/l mileage."
-          why="Understanding what your motorcycle actually costs to run makes every commute and weekend highway run clearer."
-          className="soft-section"
-        >
-          <FuelFeatureDemo />
-        </Feature>
-
-        <section className="waitlist-section" id="waitlist" aria-labelledby="waitlist-title">
-          <div className="container waitlist-inner">
-            <p className="eyebrow">THROTTLE / EARLY ACCESS</p>
-            <h2 id="waitlist-title">
-              Your Next Ride
-              <br />
-              <em>Starts Here.</em>
-            </h2>
-            <p className="waitlist-copy">
-              Join the early-access waitlist for launch updates ahead of 1 January 2027. No spam — just a note when THROTTLE is ready.
-            </p>
-            <div className="waitlist-embed">
-              <iframe
-                src={WAITLIST_EMBED_URL}
-                title="THROTTLE early-access waitlist form"
-                loading="lazy"
-                width="100%"
-                height="620"
-              >
-                Loading waitlist form…
-              </iframe>
-            </div>
-            <div className="waitlist-fallback">
-              <span>Prefer opening the form directly?</span>
-              <a href={WAITLIST_FORM_URL} target="_blank" rel="noopener noreferrer">
-                Open Google Form in a new tab
-                <ArrowUpRight size={15} />
-              </a>
-            </div>
-          </div>
-        </section>
+      <main id="main">
+        <Hero />
+        <Intro />
+        <Features />
+        <Closing />
+        <JoinSection />
       </main>
-      <footer className="site-footer">
-        <div className="container">
-          <Brand />
-          <p>© {new Date().getFullYear()} THROTTLE · In development · All previews use illustrative sample data.</p>
-          <a href="#top">Back to top ↑</a>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }

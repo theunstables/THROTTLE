@@ -1,5 +1,24 @@
 import { describe, expect, test } from "bun:test";
-import { calculateFill, initialFuel, maintenance, centres } from "../src/demo";
+import { calculateFill, documents, getCountdown, initialFuel, maintenance } from "../src/demo";
+import { LAUNCH_TARGET_ISO } from "../src/config";
+
+describe("launch countdown to 1 January 2027 00:00 IST", () => {
+  test("computes exact days, hours, minutes and seconds before launch", () => {
+    const oneDayAndChangeBefore = Date.parse(LAUNCH_TARGET_ISO) - ((2 * 86400 + 3 * 3600 + 4 * 60 + 5) * 1000);
+    expect(getCountdown(LAUNCH_TARGET_ISO, oneDayAndChangeBefore)).toEqual({
+      launched: false,
+      days: 2,
+      hours: 3,
+      minutes: 4,
+      seconds: 5,
+    });
+  });
+  test("switches to launched state at and after the target timestamp without negative numbers", () => {
+    const exact = Date.parse(LAUNCH_TARGET_ISO);
+    expect(getCountdown(LAUNCH_TARGET_ISO, exact)).toEqual({ launched: true, days: 0, hours: 0, minutes: 0, seconds: 0 });
+    expect(getCountdown(LAUNCH_TARGET_ISO, exact + 60_000)).toEqual({ launched: true, days: 0, hours: 0, minutes: 0, seconds: 0 });
+  });
+});
 
 describe("local full-to-full fuel preview", () => {
   test("260 km with 10 litres gives 26 km/L and ₹1,050 at ₹105/L", () => {
@@ -24,10 +43,7 @@ describe("local full-to-full fuel preview", () => {
   });
 });
 
-test("bike care includes all five requested motorcycle checks", () => {
-  expect(maintenance.map(item => item.id)).toEqual(["oil", "chain", "brakes", "tyres", "service"]);
-});
-test("service discovery uses illustrative locations and no ratings", () => {
-  expect(centres.map(item => item.name)).toEqual(["Demo Workshop A", "Demo Workshop B", "Demo Workshop C"]);
-  expect(centres.some(item => "rating" in item)).toBe(false);
+test("bike garage includes maintenance tasks and key documents", () => {
+  expect(maintenance.map(item => item.id)).toEqual(["chain-clean", "oil", "chain-lube", "tyres"]);
+  expect(documents.map(doc => doc.id)).toEqual(["insurance", "rc", "puc"]);
 });

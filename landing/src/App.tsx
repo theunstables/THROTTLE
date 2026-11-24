@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowRight, Menu, X, Wrench, Fuel, Users, Gauge, MessageSquarePlus } from "lucide-react";
 import hero from "./assets/hero-ghats.webp";
 import closing from "./assets/closing-riders.webp";
-import { LAUNCH_TARGET_ISO, WAITLIST_EMBED_URL } from "./config";
+import { LAUNCH_TARGET_ISO } from "./config";
+import { JoinSection } from "./JoinSection";
 
-const WAITLIST_VIEW_URL = WAITLIST_EMBED_URL.replace("?embedded=true", "");
+
 import { getCountdown, pad } from "./demo";
 import { CommunityPreview, FuelPreview, GaragePreview } from "./ProductPreview";
 
-const FEEDBACK_ENTRY = "entry.1393558069"; // "Feedback or Suggestions" field on the existing waitlist form
+
 
 function AnnouncementBar() {
   const [now, setNow] = useState<number | null>(null);
@@ -18,14 +19,13 @@ function AnnouncementBar() {
     <div className="announce" role="timer" aria-live="off">
       <div className="container announce-inner">
         {now !== null && c.launched ? (
-          <span className="announce-launch">THROTTLE IS HERE · LAUNCH DAY, 01/01/2027</span>
+          <span className="announce-launch">THROTTLE IS HERE</span>
         ) : (
           <>
             <span className="announce-label">The wait ends in</span>
             <span className="announce-clock" aria-label={`${c.days} days ${c.hours} hours ${c.minutes} minutes ${c.seconds} seconds`}>
               {now === null ? "-- : -- : -- : --" : <>{pad(c.days)}<i>D</i> : {pad(c.hours)}<i>H</i> : {pad(c.minutes)}<i>M</i> : {pad(c.seconds)}<i>S</i></>}
             </span>
-            <span className="announce-date">1 January 2027</span>
           </>
         )}
       </div>
@@ -77,7 +77,7 @@ function Hero() {
 
 function Intro() {
   const items = [
-    { icon: Wrench, title: "Manage your garage", text: "Maintenance, servicing, documents and odometer — one place." },
+    { icon: Wrench, title: "Manage your garage", text: "Odometer, maintenance, servicing and documents — one place." },
     { icon: Fuel, title: "Know your costs", text: "Log every fill-up and understand your real mileage." },
     { icon: Users, title: "Ride together", text: "Find riders, communities and upcoming rides near you." },
   ];
@@ -101,14 +101,15 @@ function Intro() {
 
 type Feature = "garage" | "fuel" | "community";
 const features: { id: Feature; label: string; headline: string; text: string; why: string }[] = [
-  { id: "garage", label: "My Garage", headline: "Your motorcycle, fully organised.", text: "Maintenance, servicing, documents and odometer — everything your motorcycle needs, in one garage.", why: "Stay ahead of your motorcycle instead of chasing paperwork and reminders." },
+  { id: "garage", label: "My Garage", headline: "Your motorcycle, fully organised.", text: "Odometer, maintenance, servicing and documents — everything your motorcycle needs, in one garage.", why: "Stay ahead of your motorcycle instead of chasing paperwork and reminders." },
   { id: "fuel", label: "Fuel & Maps", headline: "Know what every ride costs.", text: "Track your fuel expenses, understand your motorcycle's mileage and explore fuel stops through maps.", why: "Understand where your money goes and make every kilometre count." },
   { id: "community", label: "Community", headline: "More than a motorcycle. A community.", text: "Discover riders, share experiences, find communities and explore upcoming rides.", why: "Because some of the best motorcycle memories begin with the people you meet along the way." },
 ];
 
 function Features() {
   const [active, setActive] = useState<Feature>("garage");
-  const f = features.find(x => x.id === active) ?? features[0]!;
+  const f = features.find(x => x.id === active) ?? features[0];
+  if (!f) return null;
   return (
     <section id="features" className="features">
       <div className="container">
@@ -151,58 +152,7 @@ function Closing() {
         <p>Every kilometre has a memory. Every motorcycle has a journey. And every rider deserves a better ownership experience.</p>
         <p>THROTTLE is being built for people who live for the ride. We're building this with riders, for riders. Be part of the journey from day one.</p>
         <div className="hero-actions">
-          <a href="#waitlist" className="button">Join the waitlist<ArrowRight size={16} aria-hidden="true" /></a>
           <a href="#feedback" className="button button--ghost">Share your ideas<MessageSquarePlus size={16} aria-hidden="true" /></a>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function JoinSection() {
-  const [embed, setEmbed] = useState(WAITLIST_EMBED_URL);
-  const [a, setA] = useState({ features: "", problem: "", ideas: "" });
-  const [added, setAdded] = useState(false);
-  const [prefill, setPrefill] = useState("");
-  const formRef = useRef<HTMLDivElement>(null);
-  const hasText = Object.values(a).some(v => v.trim());
-  const addToForm = () => {
-    const text = [
-      a.features.trim() && `Features I'd like: ${a.features.trim()}`,
-      a.problem.trim() && `Ownership problem to solve: ${a.problem.trim()}`,
-      a.ideas.trim() && `Ideas: ${a.ideas.trim()}`,
-    ].filter(Boolean).join("\n\n");
-    const q = `${FEEDBACK_ENTRY}=${encodeURIComponent(text)}`;
-    setPrefill(q);
-    setEmbed(`${WAITLIST_EMBED_URL}&${q}`);
-    setAdded(true);
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-  return (
-    <section className="join">
-      <div className="container join-grid">
-        <div id="waitlist" className="join-card join-card--dark" ref={formRef}>
-          <p className="eyebrow eyebrow--lime">Early access</p>
-          <h2 className="display-sm">Join the waitlist.</h2>
-          <p className="join-copy">Be among the first riders to use THROTTLE when it launches on 1 January 2027.</p>
-          {added && <p className="join-added" role="status">Your ideas are filled into the "Feedback or Suggestions" box below. Complete the form and press Submit to send them.</p>}
-          <div className="form-frame">
-            <iframe key={embed} src={embed} title="THROTTLE waitlist form (Google Forms)" loading="lazy">Loading…</iframe>
-          </div>
-          <p className="fine fine--inverse">Secure form by Google Forms. Your confirmation appears here once Google accepts your response.</p>
-          <a className="frame-fallback" href={prefill ? `${WAITLIST_VIEW_URL}?usp=pp_url&${prefill}` : WAITLIST_VIEW_URL} target="_blank" rel="noopener noreferrer">Form asking you to sign in, or not loading? Open it in a new tab<ArrowRight size={14} aria-hidden="true" /></a>
-        </div>
-        <div id="feedback" className="join-card">
-          <p className="eyebrow">Build it with us</p>
-          <h2 className="display-sm">What should we build next?</h2>
-          <p className="join-copy">THROTTLE is being built for riders. Tell us what we're missing, what you would love to see and how we can make it better.</p>
-          <form className="feedback-form" onSubmit={e => { e.preventDefault(); if (hasText) addToForm(); }}>
-            <label><span>What additional features would you like to see in THROTTLE?</span><textarea rows={2} value={a.features} onChange={e => setA({ ...a, features: e.target.value })} /></label>
-            <label><span>What is one motorcycle ownership problem you wish could be solved?</span><textarea rows={2} value={a.problem} onChange={e => setA({ ...a, problem: e.target.value })} /></label>
-            <label><span>Any ideas or suggestions to improve THROTTLE?</span><textarea rows={2} value={a.ideas} onChange={e => setA({ ...a, ideas: e.target.value })} /></label>
-            <button type="submit" className="button" disabled={!hasText}>Add my ideas to the form<ArrowRight size={16} aria-hidden="true" /></button>
-            <p className="fine">Feedback is sent through the same THROTTLE Google Form, in its "Feedback or Suggestions" field. Agreeing to updates in that form is optional.</p>
-          </form>
         </div>
       </div>
     </section>

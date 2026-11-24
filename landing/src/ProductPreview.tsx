@@ -1,9 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { Check, ChevronLeft, FileText, Fuel, Gauge, Heart, MapPin, MessageCircle, RotateCcw, Users, Wrench, Calendar, Route } from "lucide-react";
+import { Check, ChevronLeft, FileText, Fuel, Gauge, MapPin, RotateCcw, Users, Wrench } from "lucide-react";
 import {
-  calculateFill, communities, completedMaintenance, documents, formatDate, fuelStations, initialFuel, initialOdometer,
-  maintenance, people, posts, rupees, serviceHistory, upcomingRides, validateOdometer, type FuelEntry,
+  calculateFill, completedMaintenance, documents, formatDate, fuelStations, initialFuel, initialOdometer, garageSectionOrder,
+  maintenance, rupees, serviceHistory, type FuelEntry,
 } from "./demo";
+
+import { CommunityContent } from "./CommunityPreview";
+import { OdometerPreview } from "./OdometerPreview";
 
 /* ---------- phone shell ---------- */
 export function Phone({ title, children }: { title: string; children: ReactNode }) {
@@ -35,9 +38,7 @@ function Note({ text, why }: { text: string; why: string }) {
 
 /* ---------- MY GARAGE ---------- */
 type GarageTab = "maintenance" | "servicing" | "documents" | "odometer";
-const garageTabs: { id: GarageTab; label: string }[] = [
-  { id: "maintenance", label: "Maintenance" }, { id: "servicing", label: "Servicing" }, { id: "documents", label: "Documents" }, { id: "odometer", label: "Odometer" },
-];
+const garageTabs = garageSectionOrder.map(id => ({ id, label: id.charAt(0).toUpperCase() + id.slice(1) }));
 const garageCopy: Record<GarageTab, [string, string]> = {
   maintenance: ["Never lose track of what your motorcycle needs. Keep upcoming maintenance, reminders and completed tasks organised.", "Stay ahead of routine maintenance instead of remembering everything at the last minute."],
   servicing: ["Keep every service record in one place, from routine servicing to repairs and parts replacements.", "Understand your motorcycle's service history and avoid losing important records."],
@@ -46,17 +47,18 @@ const garageCopy: Record<GarageTab, [string, string]> = {
 };
 
 export function GaragePreview() {
-  const [tab, setTab] = useState<GarageTab>("maintenance");
+  const [tab, setTab] = useState<GarageTab>("odometer");
+  const [odoHistory, setOdoHistory] = useState(initialOdometer);
   return (
     <Phone title="My Garage">
-        <div className="bike-strip"><Wrench size={16} aria-hidden="true" /><div><strong>Classic 350</strong><span>Sample motorcycle · 8,450 km</span></div></div>
+        <div className="bike-strip"><Wrench size={16} aria-hidden="true" /><div><strong>Classic 350</strong><span>Sample motorcycle · {(odoHistory[0]?.reading ?? 8450).toLocaleString("en-IN")} km</span></div></div>
         <Tabs label="My Garage sections" items={garageTabs} value={tab} onChange={setTab} />
         <div className="app-panel" role="tabpanel">
           <Note text={garageCopy[tab][0]} why={garageCopy[tab][1]} />
-          {tab === "maintenance" && <Maintenance />}
-          {tab === "servicing" && <Servicing />}
-          {tab === "documents" && <Documents />}
-          {tab === "odometer" && <Odometer />}
+          <div hidden={tab !== "maintenance"}><Maintenance /></div>
+          <div hidden={tab !== "servicing"}><Servicing /></div>
+          <div hidden={tab !== "documents"}><Documents /></div>
+          <div hidden={tab !== "odometer"}><OdometerPreview history={odoHistory} setHistory={setOdoHistory} /></div>
         </div>
       </Phone>
   );
@@ -148,38 +150,6 @@ function Documents() {
   );
 }
 
-function Odometer() {
-  const [history, setHistory] = useState(initialOdometer);
-  const [value, setValue] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const last = history[0]?.reading ?? 0;
-  const prev = history[1]?.reading ?? last;
-  const submit = () => {
-    const n = Number(value);
-    const err = validateOdometer(last, n);
-    setError(err);
-    if (!err) { setHistory(h => [{ reading: n, date: formatDate(new Date()) }, ...h]); setValue(""); }
-  };
-  const max = Math.max(...history.map(h => h.reading)), min = Math.min(...history.map(h => h.reading));
-  return (
-    <>
-      <div className="odo"><small>Current reading</small><strong>{last.toLocaleString("en-IN")}<span> km</span></strong><small>Updated {history[0]?.date} · +{(last - prev).toLocaleString("en-IN")} km since last</small></div>
-      <form className="inline-form" onSubmit={e => { e.preventDefault(); submit(); }}>
-        <label htmlFor="odo-in" className="sr-only">New odometer reading in km</label>
-        <input id="odo-in" inputMode="numeric" placeholder="New reading (km)" value={value} onChange={e => setValue(e.target.value.replace(/[^\d]/g, ""))} />
-        <button type="submit" className="mini-btn">Update</button>
-      </form>
-      {error && <p className="form-error" role="alert">{error}</p>}
-      <div className="bars" aria-label="Kilometre history">
-        {[...history].slice(0, 6).reverse().map(h => (
-          <div key={h.reading} className="bar"><span style={{ height: `${max === min ? 100 : 30 + ((h.reading - min) / (max - min)) * 70}%` }} /><small>{h.date.slice(0, 5)}</small></div>
-        ))}
-      </div>
-      {history.length > initialOdometer.length && <button type="button" className="text-btn" onClick={() => { setHistory(initialOdometer); setError(null); }}><RotateCcw size={13} aria-hidden="true" />Reset</button>}
-    </>
-  );
-}
-
 /* ---------- FUEL & MAPS ---------- */
 type FuelTab = "log" | "insights" | "map";
 export function FuelPreview() {
@@ -251,62 +221,8 @@ export function FuelPreview() {
 }
 
 /* ---------- COMMUNITY ---------- */
-type CommTab = "posts" | "rides" | "groups" | "people";
 export function CommunityPreview() {
-  const [tab, setTab] = useState<CommTab>("posts");
-  const [liked, setLiked] = useState<string[]>([]);
-  const [openComments, setOpenComments] = useState<string | null>(null);
-  const [extra, setExtra] = useState<Record<string, string[]>>({});
-  const [draft, setDraft] = useState("");
-  const [ride, setRide] = useState<string | null>(null);
-  const [joined, setJoined] = useState<string[]>([]);
-  const r = upcomingRides.find(x => x.id === ride);
-  return (
-    <Phone title="Community">
-      <Tabs label="Community sections" value={tab} onChange={setTab} items={[{ id: "posts", label: "Posts" }, { id: "rides", label: "Rides" }, { id: "groups", label: "Groups" }, { id: "people", label: "People" }]} />
-      <div className="app-panel" role="tabpanel">
-        {tab === "posts" && posts.map(p => {
-          const isLiked = liked.includes(p.id);
-          const comments = [...p.comments, ...(extra[p.id] ?? [])];
-          return (
-            <article key={p.id} className="post">
-              <header><strong>{p.author}</strong><small>{p.bike} · {p.place}</small></header>
-              <div className={`post-photo post-photo--${p.id}`} role="img" aria-label={`Sample ride photo from ${p.place}`} />
-              <p>{p.text}</p>
-              <div className="post-actions">
-                <button type="button" className={isLiked ? "is-liked" : ""} aria-pressed={isLiked} onClick={() => setLiked(l => isLiked ? l.filter(x => x !== p.id) : [...l, p.id])}><Heart size={15} aria-hidden="true" />{p.likes + (isLiked ? 1 : 0)}</button>
-                <button type="button" aria-expanded={openComments === p.id} onClick={() => setOpenComments(o => o === p.id ? null : p.id)}><MessageCircle size={15} aria-hidden="true" />{comments.length}</button>
-              </div>
-              {openComments === p.id && (
-                <div className="comments">
-                  {comments.map((c, i) => <p key={i}>{c}</p>)}
-                  <form className="inline-form" onSubmit={e => { e.preventDefault(); if (!draft.trim()) return; setExtra(x => ({ ...x, [p.id]: [...(x[p.id] ?? []), `You: ${draft.trim()}`] })); setDraft(""); }}>
-                    <label htmlFor={`c-${p.id}`} className="sr-only">Write a comment</label>
-                    <input id={`c-${p.id}`} placeholder="Write a comment (stays on this page)" value={draft} onChange={e => setDraft(e.target.value)} />
-                    <button type="submit" className="mini-btn">Post</button>
-                  </form>
-                </div>
-              )}
-            </article>
-          );
-        })}
-        {tab === "rides" && (r ? (
-          <div className="detail-view">
-            <button type="button" className="text-btn" onClick={() => setRide(null)}><ChevronLeft size={14} aria-hidden="true" />All rides</button>
-            <h4>{r.title}</h4>
-            <dl className="facts"><div><dt>Date</dt><dd>{r.date}</dd></div><div><dt>Meet</dt><dd>{r.meet}</dd></div><div><dt>Distance</dt><dd>{r.distance}</dd></div></dl>
-            <p className="body-sm">{r.text}</p>
-            <button type="button" className="mini-btn mini-btn--wide" onClick={() => setJoined(j => j.includes(r.id) ? j.filter(x => x !== r.id) : [...j, r.id])}>{joined.includes(r.id) ? "Interested ✓ (demo only)" : "I'm interested"}</button>
-          </div>
-        ) : (
-          <ul className="list">{upcomingRides.map(x => <li key={x.id} className="item"><button type="button" className="item-main" onClick={() => setRide(x.id)}><span><strong>{x.title}</strong><small><Calendar size={11} aria-hidden="true" /> {x.date} · <Route size={11} aria-hidden="true" /> {x.distance}</small></span></button></li>)}</ul>
-        ))}
-        {tab === "groups" && <ul className="list">{communities.map(c => <li key={c.id} className="item"><div className="item-main"><span><strong>{c.name}</strong><small>{c.about}</small></span><em className="pill">{c.category}</em></div></li>)}</ul>}
-        {tab === "people" && <ul className="list">{people.map(p => <li key={p.id} className="item"><div className="item-main"><Users size={18} aria-hidden="true" /><span><strong>{p.name}</strong><small>{p.bike} · {p.interests.join(" · ")}</small></span></div></li>)}</ul>}
-        <p className="fine">Sample riders, posts and groups. Not real users.</p>
-      </div>
-    </Phone>
-  );
+  return <Phone title="Community"><CommunityContent /></Phone>;
 }
 
 export const featureIcons = { garage: Wrench, fuel: Fuel, community: Users, gauge: Gauge };

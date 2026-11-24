@@ -207,3 +207,52 @@ h4, .list-label { font-size: .66rem; font-weight: 800; letter-spacing: .1em; tex
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
 
 .frame-fallback { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; min-height: 44px; font-size: .78rem; font-weight: 700; color: var(--lime); border-bottom: 1px solid var(--line-dark); }
+
+/* Native forms and richer local previews */
+.native-form { display: grid; gap: 16px; margin-top: 24px; }
+.native-form label { min-width: 0; }
+.native-form label > span { display: block; font-size: .76rem; font-weight: 700; margin-bottom: 6px; }
+.native-form label small { font-weight: 400; opacity: .65; font-size: .66rem; }
+.native-form input:not([type=checkbox]), .native-form textarea { width: 100%; min-width: 0; min-height: 44px; border: 1px solid var(--line); border-radius: 4px; background: var(--ivory); padding: 10px 12px; font-size: 16px; }
+.native-form textarea { resize: vertical; }
+.join-card--dark .native-form input:not([type=checkbox]), .join-card--dark .native-form textarea { background: var(--charcoal-2); border-color: var(--line-dark); color: var(--ivory); color-scheme: dark; }
+.native-form input:focus, .native-form textarea:focus { outline: 2px solid var(--lime-deep); outline-offset: 2px; }
+.form-columns { display: grid; grid-template-columns: 1.7fr 1fr; gap: 12px; }
+.native-form .consent { display: flex; gap: 10px; align-items: flex-start; }
+.consent input { width: 18px; height: 18px; flex: 0 0 18px; margin: 3px 0 0; accent-color: var(--lime); }
+.native-form .consent span { font-size: .7rem; font-weight: 400; line-height: 1.55; opacity: .85; }
+.consent strong { display: block; margin-bottom: 3px; font-weight: 700; }
+.native-form .button { width: 100%; }
+.handoff-note, .privacy-note { display: flex; align-items: flex-start; gap: 7px; font-size: .7rem; line-height: 1.55; opacity: .8; }
+.handoff-note svg, .privacy-note svg { flex-shrink: 0; margin-top: 3px; }
+.privacy-note { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line-dark); }
+.handoff-status { border-left: 3px solid var(--lime-deep); padding: 8px 12px; font-size: .75rem; background: var(--ivory); color: var(--charcoal); }
+.join-card--dark .handoff-status { background: var(--charcoal-2); color: var(--ivory); border-color: var(--lime); }
+.join-card--dark .form-error { color: var(--warn); }
+.odo-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.odo-metrics small, .odo-metrics span { display: block; color: var(--steel); font-size: .6rem; }
+.odo-metrics strong { display: block; font: 700 1.1rem/1.4 var(--display); }
+.reading-form { display: grid; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.reading-form label span { display: block; font-size: .66rem; font-weight: 700; margin-bottom: 4px; }
+.reading-form input { width: 100%; min-width: 0; padding: 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 4px; font-size: 16px; }
+.community-tabs button { font-size: .56rem; line-height: 1.2; }
+.community-demo { font-size: .6rem; font-weight: 800; text-transform: uppercase; color: var(--lime-deep); margin-bottom: 8px; }
+.community-photo { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; margin-top: 8px; }
+.rider-header { display: flex; align-items: center; gap: 8px; }
+.rider-avatar { flex: 0 0 36px; width: 36px; height: 36px; display: grid; place-items: center; background: var(--charcoal); color: var(--lime); border-radius: 4px; font: 700 1.3rem/1 var(--display); }
+.community-grid { display: grid; gap: 12px; }
+.community-card { display: block; text-align: left; width: 100%; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--paper); transition: border-color .2s, background .2s; }
+.community-card:hover { border-color: var(--lime-deep); background: var(--ivory); }
+.community-card > .community-photo { margin-top: 0; border-radius: 0; }
+.community-card-body { display: grid; gap: 4px; padding: 10px; }
+.community-card-body > small, .community-card-body > span { font-size: .68rem; line-height: 1.5; color: var(--charcoal-3); display: flex; align-items: center; gap: 4px; }
+.community-card-body > small { color: var(--lime-deep); font-size: .6rem; font-weight: 800; text-transform: uppercase; }
+.community-card-body > strong { font: 700 1.15rem/1.1 var(--display); }
+.community-card-body > b { display: flex; align-items: center; gap: 5px; font-size: .6rem; text-transform: uppercase; margin-top: 3px; }
+.rider-card { display: flex; align-items: flex-start; gap: 2px; padding-left: 10px; }
+.rider-card .rider-avatar { margin-top: 12px; }
+.profile-banner { padding-block: 12px; }
+.profile-banner p { font-size: .68rem; color: var(--steel); }
+.rider-avatar--large { width: 56px; height: 56px; margin-bottom: 12px; font-size: 2rem; }
+.item, .post, .stat-row div, .doc-card, .odo { border-radius: 6px; }
+@media (max-width: 480px) { .form-columns { grid-template-columns: 1fr; } .join-card { padding: 24px 18px; } }

@@ -77,7 +77,7 @@ export const initialOdometer = [
 
 /** Returns an error message, or null when the new reading is acceptable. */
 export function validateOdometer(last: number, next: number): string | null {
-  if (!Number.isFinite(next) || next <= 0) return "Enter a valid reading in km.";
+  if (!Number.isSafeInteger(next) || next <= 0 || next > 9999999) return "Enter a valid reading in km.";
   if (next < last) return `Reading can't go backwards. Last was ${last.toLocaleString("en-IN")} km.`;
   if (next === last) return "That's the same as the last reading.";
   return null;
@@ -85,7 +85,7 @@ export function validateOdometer(last: number, next: number): string | null {
 
 /* ---------- Community ---------- */
 export const posts = [
-  { id: "p1", author: "Sample rider · Arjun", bike: "Classic 350", place: "Nandi Hills", text: "Dawn run done before the traffic woke up. Fog all the way to the top.", likes: 42, comments: ["Sample: That fog is unreal!", "Sample: Joining next Sunday."] },
+  { id: "p1", author: "Sample rider · Arjun", bike: "Classic 350", place: "Weekend cafe stop", text: "The best part of a weekend ride? Parking up, taking in the view and talking motorcycles.", likes: 42, comments: ["Sample: That fog is unreal!", "Sample: Joining next Sunday."] },
   { id: "p2", author: "Sample rider · Meera", bike: "Himalayan 450", place: "Spiti Valley", text: "Day 4 — Kaza to Langza. Thin air, wide smiles.", likes: 87, comments: ["Sample: Bucket list route."] },
 ];
 export const upcomingRides = [
@@ -93,12 +93,17 @@ export const upcomingRides = [
   { id: "tamhini", title: "Tamhini Ghat Coffee Ride", date: "12/12/2026 · 06:00", meet: "Sample meeting point · Chandni Chowk, Pune", distance: "140 km round trip", text: "Twisties through the ghat, coffee stop at Mulshi." },
 ];
 export const communities = [
-  { id: "touring", name: "Highway Touring India", category: "Touring", about: "Long-distance routes and trip planning" },
-  { id: "weekend", name: "Sunday Morning Breakers", category: "Weekend", about: "Short dawn rides around the city" },
-  { id: "classic", name: "Classic 350 Owners", category: "Motorcycle", about: "Tips, mods and meetups for one bike" },
+  { id: "weekend", name: "Weekend Riders", category: "Weekend rides", about: "Early starts, coffee stops and short escapes from the city." },
+  { id: "touring", name: "Touring Collective", category: "Touring", about: "Long-distance routes, packing lists and stories from the road." },
+  { id: "adventure", name: "Adventure Riders", category: "Adventure", about: "Trail techniques, mountain routes and getting off the beaten path." },
+  { id: "enfield", name: "Royal Enfield Riders", category: "Classic motorcycles", about: "Owner tips and classic motorcycle journeys. Unofficial demo." },
+  { id: "sports", name: "Sports Bike Community", category: "Sport riding", about: "Track preparation, safety and performance-minded conversations." },
+  { id: "photo", name: "Motorcycle Photography", category: "Photography", about: "Chasing good light and sharing motorcycles through a lens." },
 ];
 export const people = [
-  { id: "r1", name: "Sample · Kabir", bike: "Interceptor 650", interests: ["Touring", "Photography"] },
-  { id: "r2", name: "Sample · Ananya", bike: "Duke 390", interests: ["Track days", "Weekend rides"] },
-  { id: "r3", name: "Sample · Rohan", bike: "Classic 350", interests: ["Home garage", "Coffee rides"] },
+  { id: "r1", name: "Sample · Kabir", bike: "Interceptor 650", location: "Bengaluru", interests: ["Touring", "Photography"], bio: "Fictional weekend explorer with a camera in the tank bag." },
+  { id: "r2", name: "Sample · Ananya", bike: "Duke 390", location: "Pune", interests: ["Track days", "Weekend rides"], bio: "Fictional rider who loves learning better cornering technique." },
+  { id: "r3", name: "Sample · Rohan", bike: "Classic 350", location: "Mysuru", interests: ["Home garage", "Coffee rides"], bio: "Fictional motorcycle tinkerer and breakfast-ride enthusiast." },
 ];
+
+export const garageSectionOrder = ["odometer", "maintenance", "servicing", "documents"] as const;

@@ -27,3 +27,15 @@ export function feedbackPrefill(features: string, problem: string, ideas: string
   const url = new URL(WAITLIST_EMBED_URL); url.search = ""; url.searchParams.set("usp", "pp_url"); url.searchParams.set(formFields.feedback, text);
   return url.toString();
 }
+
+export const FORM_RESPONSE_URL = "https://docs.google.com/forms/d/e/1FAIpQLScD9SsuMJ3NJ2FbYF3yUyVoVeVofAM_Xq2BfzHPckXIhr3M2w/formResponse";
+export function waitlistBody(v: WaitlistValues): URLSearchParams {
+  const error = waitlistError(v); if (error) throw new Error(error);
+  const b = new URLSearchParams();
+  b.set("emailAddress", v.email.trim()); b.set(formFields.city, v.city.trim()); b.set(formFields.age, v.age);
+  b.set(formFields.feedback, v.feedback.trim()); if (v.consent) b.set(formFields.consent, consentText);
+  return b;
+}
+export async function submitWaitlist(v: WaitlistValues): Promise<void> {
+  await fetch(FORM_RESPONSE_URL, { method: "POST", mode: "no-cors", body: waitlistBody(v) });
+}

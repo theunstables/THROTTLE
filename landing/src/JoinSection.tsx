@@ -1,26 +1,57 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { consentText, joinError, submitJoin, type JoinValues } from "./formIntegration";
+import {
+  consentText,
+  FORM_RESPONSE_URL,
+  formFields,
+  joinError,
+  type JoinValues,
+} from "./formIntegration";
 
-const empty: JoinValues = { name: "", email: "", city: "", age: "", bike: "", features: "", problem: "", suggestions: "", consent: false };
-const Opt = () => <small>Optional</small>;
-const Req = () => <b aria-label="required">*</b>;
+const empty: JoinValues = { email: "", feedback: "", consent: false };
+const Optional = () => <small>Optional</small>;
 
 function Field({ label, children }: { label: ReactNode; children: ReactNode }) {
   return <label><span>{label}</span>{children}</label>;
 }
 
 export function JoinSection() {
-  const [v, setV] = useState<JoinValues>(empty);
+  const [values, setValues] = useState<JoinValues>(empty);
   const [error, setError] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
-  const set = <K extends keyof JoinValues>(k: K, x: JoinValues[K]) => setV(p => ({ ...p, [k]: x }));
-  async function submit(e: FormEvent) {
-    e.preventDefault(); const issue = joinError(v); setError(issue ?? ""); if (issue) return;
-    setState("sending");
-    try { await submitJoin(v); setState("sent"); setV(empty); }
-    catch { setState("idle"); setError("Couldn't send right now. Check your connection and try again."); }
+  const [submitting, setSubmitting] = useState(false);
+  const sending = useRef(false);
+
+  const set = <K extends keyof JoinValues>(key: K, value: JoinValues[K]) => {
+    setValues(previous => ({ ...previous, [key]: value }));
+    if (error) setError("");
+  };
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    if (sending.current) {
+      event.preventDefault();
+      return;
+    }
+
+    const issue = joinError(values);
+    if (issue) {
+      event.preventDefault();
+      setError(issue);
+      return;
+    }
+
+    if (!navigator.onLine) {
+      event.preventDefault();
+      setError("You appear to be offline. Reconnect and try again.");
+      return;
+    }
+
+    // A native POST is deliberate: Google does not expose cross-origin fetch
+    // responses, so only Google's own confirmation page can prove acceptance.
+    setError("");
+    sending.current = true;
+    setSubmitting(true);
   }
+
   return (
     <section className="join">
       <div className="container">
@@ -28,30 +59,60 @@ export function JoinSection() {
           <span id="feedback" className="anchor" aria-hidden="true" />
           <p className="eyebrow eyebrow--lime">Early access</p>
           <h2 className="display-sm">Let's build THROTTLE together.</h2>
-          <p className="join-copy">Tell us a little about yourself, your motorcycle and what would make ownership better. Join the early-access list and help shape what THROTTLE becomes.</p>
-          <form className="native-form" onSubmit={submit} noValidate>
-            <fieldset><legend><i>A</i>About you</legend>
-              <div className="form-columns form-columns--even">
-                <Field label={<>Name <Opt /></>}><input autoComplete="name" maxLength={120} value={v.name} onChange={e => set("name", e.target.value)} placeholder="What should we call you?" /></Field>
-                <Field label={<>Email address <Req /></>}><input type="email" autoComplete="email" required maxLength={254} value={v.email} onChange={e => set("email", e.target.value)} placeholder="you@example.com" /></Field>
-                <Field label={<>Which city are you riding from? <Opt /></>}><input autoComplete="address-level2" maxLength={120} value={v.city} onChange={e => set("city", e.target.value)} placeholder="Your city" /></Field>
-                <Field label={<>What is your age? <Req /></>}><input type="number" inputMode="numeric" required min={1} max={120} step={1} value={v.age} onChange={e => set("age", e.target.value)} placeholder="Age" /></Field>
-              </div>
-            </fieldset>
-            <fieldset><legend><i>B</i>Your motorcycle</legend>
-              <Field label={<>Motorcycle make and model <Opt /></>}><input maxLength={120} value={v.bike} onChange={e => set("bike", e.target.value)} placeholder="For example: Yamaha MT-07" /></Field>
-            </fieldset>
-            <fieldset><legend><i>C</i>Your ideas <small>All optional</small></legend>
-              <Field label="What additional features would you like to see in THROTTLE?"><textarea rows={2} maxLength={600} value={v.features} onChange={e => set("features", e.target.value)} placeholder="For example: service reminders, expense analytics, ride planning, document alerts or something completely different..." /></Field>
-              <Field label="What is one motorcycle ownership problem you wish could be solved?"><textarea rows={2} maxLength={600} value={v.problem} onChange={e => set("problem", e.target.value)} placeholder="Tell us about something that frustrates you as a motorcycle owner. What takes too much time, is difficult to track or could be made easier?" /></Field>
-              <Field label="Any other ideas or suggestions?"><textarea rows={2} maxLength={600} value={v.suggestions} onChange={e => set("suggestions", e.target.value)} placeholder="Share any thoughts, improvements or features that would make THROTTLE more useful for riders..." /></Field>
-            </fieldset>
-            <label className="consent"><input type="checkbox" checked={v.consent} onChange={e => set("consent", e.target.checked)} /><span><strong>Stay Connected · Optional</strong>{consentText}</span></label>
-            {error && <p className="form-error" role="alert">{error}</p>}
-            <button type="submit" className="button" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Join the THROTTLE early-access list"}<ArrowRight size={16} aria-hidden="true" /></button>
-            {state === "sent" && <p className="handoff-status" role="status">Thanks — your answers have been sent to the THROTTLE team. We'll be in touch as early access opens.</p>}
+          <p className="join-copy">Join the THROTTLE early-access list and help us build a better motorcycle ownership experience. Share your email and, if you like, tell us what we could do better.</p>
+          <form
+            className="native-form"
+            action={FORM_RESPONSE_URL}
+            method="POST"
+            acceptCharset="UTF-8"
+            onSubmit={submit}
+            noValidate
+            aria-busy={submitting}
+          >
+            <Field label={<>YOUR EMAIL ADDRESS <b aria-label="required">*</b></>}>
+              <input
+                name="emailAddress"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                maxLength={254}
+                value={values.email}
+                onChange={event => set("email", event.target.value)}
+                placeholder="Enter your email address"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "waitlist-error" : undefined}
+              />
+            </Field>
+            <Field label={<>HELP US BUILD THROTTLE BETTER <Optional /></>}>
+              <textarea
+                name={formFields.feedback}
+                rows={5}
+                maxLength={2000}
+                value={values.feedback}
+                onChange={event => set("feedback", event.target.value)}
+                placeholder="Have an idea for an additional feature? Is there a motorcycle ownership problem you'd like us to solve? Or do you have any suggestions to make THROTTLE better? We'd love to hear your thoughts..."
+              />
+            </Field>
+            <label className="consent">
+              <input
+                name={formFields.consent}
+                type="checkbox"
+                value={consentText}
+                checked={values.consent}
+                onChange={event => set("consent", event.target.checked)}
+              />
+              <span><strong>Stay connected</strong>I'd like to receive occasional updates about THROTTLE, product development and early access.</span>
+            </label>
+            {error && <p id="waitlist-error" className="form-error" role="alert">{error}</p>}
+            <button type="submit" className="button" disabled={submitting}>
+              {submitting ? "Submitting your response…" : "Join the THROTTLE community"}
+              {!submitting && <ArrowRight size={16} aria-hidden="true" />}
+            </button>
           </form>
-          <p className="privacy-note"><ShieldCheck size={14} aria-hidden="true" />Your answers go straight to the THROTTLE team's form. We only use them to plan early access and improve THROTTLE. Updates are sent only if you tick Stay Connected, and you can unsubscribe anytime.</p>
+          <p className="privacy-note"><ShieldCheck size={14} aria-hidden="true" />Google will show its own confirmation page when your response is received. Updates are sent only if you tick Stay connected; feedback is always optional.</p>
         </div>
       </div>
     </section>

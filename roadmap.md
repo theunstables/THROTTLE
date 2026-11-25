@@ -120,3 +120,10 @@
 - Three fuel-rule tests pass. Browser checks pass at 1440, 768, 390 and 320 px: all five tabs, keyboard navigation, fuel save/calculation/history, maintenance checklist/timeline/costs, three map pins, reaction/comment, state retained across tabs and reset on refresh.
 - All five waitlist CTAs opened the real Google Form in new tabs. No console errors, failed responses or page-level horizontal overflow.
 - Previous deployed base-path fix verified live; this redesign awaits the automatic branch sync and GitHub Actions deployment after the final reply.
+
+## Simplified waitlist form
+- [x] Keep only required email, optional feedback and optional Stay Connected consent.
+- [x] Preserve the existing Google Form and map all three answers to its inspected fields.
+- [x] Send both requested labelled test scenarios; Google confirmed each response.
+- [x] Verify native submission, validation, duplicate prevention and mobile layout in the browser.
+- [ ] Publish only the landing changes to `throttle-landing` and verify GitHub Pages.

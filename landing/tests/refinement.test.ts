@@ -21,3 +21,17 @@ describe("existing Google destination and field requirements", () => {
 
 test("waitlist sends answers directly to the Google form fields", () => { const b=waitlistBody(v);expect(b.get("emailAddress")).toBe("test@example.com");expect(b.get("entry.170455927")).toBe("30");expect(b.get("entry.2127194441")).toBe("Pune"); });
 test("waitlist direct send rejects missing age", () => { expect(()=>waitlistBody({...v,age:""})).toThrow(); });
+
+import { joinBody, joinError } from "../src/formIntegration";
+import { findStations } from "../src/demo";
+const j = { name: "Asha", email: "asha@example.com", city: "Pune", age: "29", bike: "Yamaha MT-07", features: "Ride planning", problem: "", suggestions: "", consent: false };
+describe("unified early-access form", () => {
+  test("sends email, city and age to their existing Google fields", () => { const b = joinBody(j); expect(b.get("emailAddress")).toBe("asha@example.com"); expect(b.get("entry.2127194441")).toBe("Pune"); expect(b.get("entry.170455927")).toBe("29"); });
+  test("name, motorcycle and ideas go into the existing Feedback field", () => { expect(joinBody(j).get("entry.1393558069")).toBe("Name: Asha\nMotorcycle: Yamaha MT-07\nFeatures wanted: Ride planning"); });
+  test("ideas are optional", () => expect(joinError({ ...j, features: "", bike: "", name: "" })).toBeNull());
+  test("age stays required", () => expect(joinError({ ...j, age: "" })).not.toBeNull());
+  test("email stays required", () => expect(joinError({ ...j, email: "" })).not.toBeNull());
+  test("giving feedback does not opt in to updates", () => expect(joinBody(j).has("entry.1549883233")).toBe(false));
+});
+test("fuel stations sort cheapest first for chosen fuel", () => expect(findStations("", "petrol").map(s => s.id)).toEqual(["s3", "s1", "s2"]));
+test("station search filters by area", () => expect(findStations("hosur", "premium").map(s => s.id)).toEqual(["s2"]));

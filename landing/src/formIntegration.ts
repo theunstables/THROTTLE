@@ -39,3 +39,23 @@ export function waitlistBody(v: WaitlistValues): URLSearchParams {
 export async function submitWaitlist(v: WaitlistValues): Promise<void> {
   await fetch(FORM_RESPONSE_URL, { method: "POST", mode: "no-cors", body: waitlistBody(v) });
 }
+
+/* ---------- Unified early-access + feedback form ---------- */
+export type JoinValues = { name: string; email: string; city: string; age: string; bike: string; features: string; problem: string; suggestions: string; consent: boolean };
+const ideaLabels: [keyof JoinValues, string][] = [["name", "Name"], ["bike", "Motorcycle"], ["features", "Features wanted"], ["problem", "Ownership problem"], ["suggestions", "Other ideas"]];
+/** The Google Form has no name/motorcycle/idea questions, so these go into its existing Feedback field as labelled lines. */
+export function joinFeedbackText(v: JoinValues): string {
+  return ideaLabels.map(([k, l]) => { const x = String(v[k]).trim(); return x ? `${l}: ${x}` : ""; }).filter(Boolean).join("\n");
+}
+export function joinError(v: JoinValues): string | null {
+  if (v.name.length > 120 || v.bike.length > 120) return "Please shorten your name or motorcycle.";
+  if ([v.features, v.problem, v.suggestions].some(x => x.length > 600)) return "Keep each idea under 600 characters.";
+  return waitlistError({ email: v.email, city: v.city, age: v.age, feedback: joinFeedbackText(v), consent: v.consent });
+}
+export function joinBody(v: JoinValues): URLSearchParams {
+  const error = joinError(v); if (error) throw new Error(error);
+  return waitlistBody({ email: v.email, city: v.city, age: v.age, feedback: joinFeedbackText(v), consent: v.consent });
+}
+export async function submitJoin(v: JoinValues): Promise<void> {
+  await fetch(FORM_RESPONSE_URL, { method: "POST", mode: "no-cors", body: joinBody(v) });
+}

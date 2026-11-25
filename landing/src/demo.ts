@@ -36,11 +36,21 @@ export function calculateFill(previous: number | null, odometer: number, litres:
   };
 }
 
+export type FuelType = "petrol" | "premium";
+/** Illustrative stations on the demo map. x/y are % positions on the map artwork. */
 export const fuelStations = [
-  { id: "s1", name: "Sample Fuel Stop A", area: "Outer Ring Road", x: 28, y: 34, price: 102.9 },
-  { id: "s2", name: "Sample Fuel Stop B", area: "Hosur Road", x: 64, y: 58, price: 103.4 },
-  { id: "s3", name: "Sample Fuel Stop C", area: "Old Airport Road", x: 46, y: 76, price: 102.6 },
+  { id: "s1", name: "Sample Fuel Stop A", area: "Outer Ring Road", x: 24, y: 30, distance: "1.2 km", open: "Open 24 hours", prices: { petrol: 102.9, premium: 110.4 } },
+  { id: "s2", name: "Sample Fuel Stop B", area: "Hosur Road", x: 74, y: 52, distance: "2.4 km", open: "Open until 23:00", prices: { petrol: 103.4, premium: 111.2 } },
+  { id: "s3", name: "Sample Fuel Stop C", area: "Old Airport Road", x: 38, y: 76, distance: "3.1 km", open: "Open 24 hours", prices: { petrol: 102.6, premium: 109.8 } },
 ];
+/** Stations matching a search, cheapest first for the chosen fuel type. */
+export function findStations(query: string, type: FuelType) {
+  const q = query.trim().toLowerCase();
+  return fuelStations.filter(s => !q || `${s.name} ${s.area}`.toLowerCase().includes(q)).sort((a, b) => a.prices[type] - b.prices[type]);
+}
+
+/** One illustrative motorcycle used across every garage screen (matches the THROTTLE app demo bike). */
+export const demoBike = { year: 2022, make: "Yamaha", model: "MT-07", nickname: "Shadow", engine: "689 cc parallel-twin", colour: "Tech Black" };
 
 /* ---------- Garage ---------- */
 export const maintenance = [

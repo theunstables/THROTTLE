@@ -1,55 +1,59 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { consentText, feedbackPrefill, waitlistError, submitWaitlist, type WaitlistValues } from "./formIntegration";
+import { consentText, joinError, submitJoin, type JoinValues } from "./formIntegration";
+
+const empty: JoinValues = { name: "", email: "", city: "", age: "", bike: "", features: "", problem: "", suggestions: "", consent: false };
+const Opt = () => <small>Optional</small>;
+const Req = () => <b aria-label="required">*</b>;
+
+function Field({ label, children }: { label: ReactNode; children: ReactNode }) {
+  return <label><span>{label}</span>{children}</label>;
+}
 
 export function JoinSection() {
-  const [values, setValues] = useState<WaitlistValues>({ email: "", city: "", age: "", feedback: "", consent: false });
-  const [ideas, setIdeas] = useState({ features: "", problem: "", suggestions: "", email: "" });
-  const [waitError, setWaitError] = useState(""); const [ideaError, setIdeaError] = useState("");
-  const [waitState, setWaitState] = useState<"idle" | "sending" | "done">("idle"); const [ideaOpened, setIdeaOpened] = useState(false);
-  const handoff = (url: string) => { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.click(); };
-  async function register(e: FormEvent) {
-    e.preventDefault(); const error = waitlistError(values); setWaitError(error ?? ""); if (error) return;
-    setWaitState("sending");
-    try { await submitWaitlist(values); setWaitState("done"); }
-    catch { setWaitState("idle"); setWaitError("Couldn't send right now. Check your connection and try again."); }
+  const [v, setV] = useState<JoinValues>(empty);
+  const [error, setError] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
+  const set = <K extends keyof JoinValues>(k: K, x: JoinValues[K]) => setV(p => ({ ...p, [k]: x }));
+  async function submit(e: FormEvent) {
+    e.preventDefault(); const issue = joinError(v); setError(issue ?? ""); if (issue) return;
+    setState("sending");
+    try { await submitJoin(v); setState("sent"); setV(empty); }
+    catch { setState("idle"); setError("Couldn't send right now. Check your connection and try again."); }
   }
-  function share(e: FormEvent) {
-    e.preventDefault(); setIdeaError("");
-    try { handoff(feedbackPrefill(ideas.features, ideas.problem, ideas.suggestions, ideas.email)); setIdeaOpened(true); }
-    catch (error) { setIdeaError(error instanceof Error ? error.message : "Please check your answers."); }
-  }
-  return <section className="join"><div className="container join-grid">
-    <div id="waitlist" className="join-card join-card--dark">
-      <p className="eyebrow eyebrow--lime">Early access</p><h2 className="display-sm">Join the waitlist.</h2>
-      <p className="join-copy">Be among the first riders to experience THROTTLE.</p>
-      <form className="native-form" onSubmit={register}>
-        <label><span>Email <b aria-label="required">*</b></span><input type="email" autoComplete="email" required maxLength={254} value={values.email} onChange={e => setValues({ ...values, email: e.target.value })} /></label>
-        <div className="form-columns">
-          <label><span>Which city are you riding from? <small>Optional</small></span><input autoComplete="address-level2" maxLength={120} value={values.city} onChange={e => setValues({ ...values, city: e.target.value })} /></label>
-          <label><span>What is your age? <b aria-label="required">*</b></span><input type="number" inputMode="numeric" required min={1} max={120} step={1} value={values.age} onChange={e => setValues({ ...values, age: e.target.value })} /></label>
+  return (
+    <section className="join">
+      <div className="container">
+        <div id="waitlist" className="join-card join-card--dark join-card--unified">
+          <span id="feedback" className="anchor" aria-hidden="true" />
+          <p className="eyebrow eyebrow--lime">Early access</p>
+          <h2 className="display-sm">Let's build THROTTLE together.</h2>
+          <p className="join-copy">Tell us a little about yourself, your motorcycle and what would make ownership better. Join the early-access list and help shape what THROTTLE becomes.</p>
+          <form className="native-form" onSubmit={submit} noValidate>
+            <fieldset><legend><i>A</i>About you</legend>
+              <div className="form-columns form-columns--even">
+                <Field label={<>Name <Opt /></>}><input autoComplete="name" maxLength={120} value={v.name} onChange={e => set("name", e.target.value)} placeholder="What should we call you?" /></Field>
+                <Field label={<>Email address <Req /></>}><input type="email" autoComplete="email" required maxLength={254} value={v.email} onChange={e => set("email", e.target.value)} placeholder="you@example.com" /></Field>
+                <Field label={<>Which city are you riding from? <Opt /></>}><input autoComplete="address-level2" maxLength={120} value={v.city} onChange={e => set("city", e.target.value)} placeholder="Your city" /></Field>
+                <Field label={<>What is your age? <Req /></>}><input type="number" inputMode="numeric" required min={1} max={120} step={1} value={v.age} onChange={e => set("age", e.target.value)} placeholder="Age" /></Field>
+              </div>
+            </fieldset>
+            <fieldset><legend><i>B</i>Your motorcycle</legend>
+              <Field label={<>Motorcycle make and model <Opt /></>}><input maxLength={120} value={v.bike} onChange={e => set("bike", e.target.value)} placeholder="For example: Yamaha MT-07" /></Field>
+            </fieldset>
+            <fieldset><legend><i>C</i>Your ideas <small>All optional</small></legend>
+              <Field label="What additional features would you like to see in THROTTLE?"><textarea rows={2} maxLength={600} value={v.features} onChange={e => set("features", e.target.value)} placeholder="For example: service reminders, expense analytics, ride planning, document alerts or something completely different..." /></Field>
+              <Field label="What is one motorcycle ownership problem you wish could be solved?"><textarea rows={2} maxLength={600} value={v.problem} onChange={e => set("problem", e.target.value)} placeholder="Tell us about something that frustrates you as a motorcycle owner. What takes too much time, is difficult to track or could be made easier?" /></Field>
+              <Field label="Any other ideas or suggestions?"><textarea rows={2} maxLength={600} value={v.suggestions} onChange={e => set("suggestions", e.target.value)} placeholder="Share any thoughts, improvements or features that would make THROTTLE more useful for riders..." /></Field>
+            </fieldset>
+            <label className="consent"><input type="checkbox" checked={v.consent} onChange={e => set("consent", e.target.checked)} /><span><strong>Stay Connected · Optional</strong>{consentText}</span></label>
+            {error && <p className="form-error" role="alert">{error}</p>}
+            <button type="submit" className="button" disabled={state === "sending"}>{state === "sending" ? "Sending…" : "Join the THROTTLE early-access list"}<ArrowRight size={16} aria-hidden="true" /></button>
+            {state === "sent" && <p className="handoff-status" role="status">Thanks — your answers have been sent to the THROTTLE team. We'll be in touch as early access opens.</p>}
+          </form>
+          <p className="privacy-note"><ShieldCheck size={14} aria-hidden="true" />Your answers go straight to the THROTTLE team's form. We only use them to plan early access and improve THROTTLE. Updates are sent only if you tick Stay Connected, and you can unsubscribe anytime.</p>
         </div>
-        <label><span>Feedback or suggestions <small>Optional</small></span><textarea rows={2} maxLength={2000} value={values.feedback} onChange={e => setValues({ ...values, feedback: e.target.value })} /></label>
-        <label className="consent"><input type="checkbox" checked={values.consent} onChange={e => setValues({ ...values, consent: e.target.checked })} /><span><strong>Stay Connected · Optional</strong>{consentText}</span></label>
-        {waitError && <p className="form-error" role="alert">{waitError}</p>}
-        <button type="submit" className="button" disabled={waitState === "sending"}>{waitState === "sending" ? "Joining…" : "Join the waitlist"}<ArrowRight size={16} aria-hidden="true" /></button>
-        {waitState === "done" && <p className="handoff-status" role="status">You're on the list. We'll be in touch as THROTTLE gets closer to launch.</p>}
-      </form>
-      <p className="privacy-note"><ShieldCheck size={14} aria-hidden="true" />Your details go to the existing THROTTLE Google Form. Updates are optional; unsubscribe anytime.</p>
-    </div>
-    <div id="feedback" className="join-card">
-      <p className="eyebrow">Build it with us</p><h2 className="display-sm">What should we build next?</h2>
-      <p className="join-copy">THROTTLE is being built for riders. Tell us what we're missing, what you would love to see and how we can make it better.</p>
-      <form className="native-form" onSubmit={share}>
-        <label><span>What additional features would you like to see in THROTTLE?</span><textarea rows={2} maxLength={600} value={ideas.features} onChange={e => setIdeas({ ...ideas, features: e.target.value })} /></label>
-        <label><span>What is one motorcycle ownership problem you wish could be solved?</span><textarea rows={2} maxLength={600} value={ideas.problem} onChange={e => setIdeas({ ...ideas, problem: e.target.value })} /></label>
-        <label><span>Any ideas or suggestions to improve THROTTLE?</span><textarea rows={2} maxLength={600} value={ideas.suggestions} onChange={e => setIdeas({ ...ideas, suggestions: e.target.value })} /></label>
-        <label><span>Email for a reply <small>Optional</small></span><input type="email" autoComplete="email" maxLength={254} value={ideas.email} onChange={e => setIdeas({ ...ideas, email: e.target.value })} /></label>
-        {ideaError && <p className="form-error" role="alert">{ideaError}</p>}
-        <button type="submit" className="button">Share feedback<ArrowRight size={16} aria-hidden="true" /></button>
-        <p className="handoff-note">Your ideas open separately in the original Google Form. It still requires email and age before submission; feedback-only delivery with an optional email needs those requirements changed by the form owner. Updates remain optional.</p>
-        {ideaOpened && <p className="handoff-status" role="status">Not submitted yet. Your ideas are prefilled in Google’s Feedback or Suggestions field. Complete its required questions and press Submit.</p>}
-      </form>
-    </div>
-  </div></section>;
+      </div>
+    </section>
+  );
 }

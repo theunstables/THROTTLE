@@ -1,16 +1,18 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, ExternalLink, ShieldCheck } from "lucide-react";
-import { consentText, feedbackPrefill, waitlistError, waitlistPrefill, type WaitlistValues } from "./formIntegration";
+import { ArrowRight, ShieldCheck } from "lucide-react";
+import { consentText, feedbackPrefill, waitlistError, submitWaitlist, type WaitlistValues } from "./formIntegration";
 
 export function JoinSection() {
   const [values, setValues] = useState<WaitlistValues>({ email: "", city: "", age: "", feedback: "", consent: false });
   const [ideas, setIdeas] = useState({ features: "", problem: "", suggestions: "", email: "" });
   const [waitError, setWaitError] = useState(""); const [ideaError, setIdeaError] = useState("");
-  const [waitOpened, setWaitOpened] = useState(false); const [ideaOpened, setIdeaOpened] = useState(false);
+  const [waitState, setWaitState] = useState<"idle" | "sending" | "done">("idle"); const [ideaOpened, setIdeaOpened] = useState(false);
   const handoff = (url: string) => { const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener noreferrer"; a.click(); };
-  function register(e: FormEvent) {
+  async function register(e: FormEvent) {
     e.preventDefault(); const error = waitlistError(values); setWaitError(error ?? ""); if (error) return;
-    handoff(waitlistPrefill(values)); setWaitOpened(true);
+    setWaitState("sending");
+    try { await submitWaitlist(values); setWaitState("done"); }
+    catch { setWaitState("idle"); setWaitError("Couldn't send right now. Check your connection and try again."); }
   }
   function share(e: FormEvent) {
     e.preventDefault(); setIdeaError("");
@@ -30,9 +32,8 @@ export function JoinSection() {
         <label><span>Feedback or suggestions <small>Optional</small></span><textarea rows={2} maxLength={2000} value={values.feedback} onChange={e => setValues({ ...values, feedback: e.target.value })} /></label>
         <label className="consent"><input type="checkbox" checked={values.consent} onChange={e => setValues({ ...values, consent: e.target.checked })} /><span><strong>Stay Connected · Optional</strong>{consentText}</span></label>
         {waitError && <p className="form-error" role="alert">{waitError}</p>}
-        <button type="submit" className="button">Join the waitlist<ArrowRight size={16} aria-hidden="true" /></button>
-        <p className="handoff-note"><ExternalLink size={13} aria-hidden="true" />Finish in Google Forms. Sign-in may be required; only Google’s confirmation means your response was accepted.</p>
-        {waitOpened && <p className="handoff-status" role="status">Not submitted yet. Review your prefilled answers in the Google tab and press Submit. Google may ask you to confirm your email.</p>}
+        <button type="submit" className="button" disabled={waitState === "sending"}>{waitState === "sending" ? "Joining…" : "Join the waitlist"}<ArrowRight size={16} aria-hidden="true" /></button>
+        {waitState === "done" && <p className="handoff-status" role="status">You're on the list. We'll be in touch as THROTTLE gets closer to launch.</p>}
       </form>
       <p className="privacy-note"><ShieldCheck size={14} aria-hidden="true" />Your details go to the existing THROTTLE Google Form. Updates are optional; unsubscribe anytime.</p>
     </div>

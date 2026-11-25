@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { garageSectionOrder, validateOdometer } from "../src/demo";
-import { feedbackPrefill, waitlistPrefill, waitlistError, consentText } from "../src/formIntegration";
+import { waitlistBody, feedbackPrefill, waitlistPrefill, waitlistError, consentText } from "../src/formIntegration";
 import { validateReadingDate } from "../src/OdometerPreview";
 
 const v = { email: "test@example.com", city: "Pune", age: "30", feedback: "", consent: false };
@@ -18,3 +18,6 @@ describe("existing Google destination and field requirements", () => {
  test("feedback does not copy waitlist age or email", () => {const u=new URL(feedbackPrefill("Trip planning","","","reply@example.com"));expect(u.searchParams.get("entry.1393558069")).toContain("Reply email: reply@example.com");expect(u.searchParams.has("entry.170455927")).toBe(false);expect(u.searchParams.has("emailAddress")).toBe(false);});
  test("blank feedback not accepted", () => expect(()=>feedbackPrefill("","","","")).toThrow());
 });
+
+test("waitlist sends answers directly to the Google form fields", () => { const b=waitlistBody(v);expect(b.get("emailAddress")).toBe("test@example.com");expect(b.get("entry.170455927")).toBe("30");expect(b.get("entry.2127194441")).toBe("Pune"); });
+test("waitlist direct send rejects missing age", () => { expect(()=>waitlistBody({...v,age:""})).toThrow(); });

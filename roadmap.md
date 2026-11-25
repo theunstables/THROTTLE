@@ -126,4 +126,4 @@
 - [x] Preserve the existing Google Form and map all three answers to its inspected fields.
 - [x] Send both requested labelled test scenarios; Google confirmed each response.
 - [x] Verify native submission, validation, duplicate prevention and mobile layout in the browser.
-- [ ] Publish only the landing changes to `throttle-landing` and verify GitHub Pages.
+- [x] Publish only the landing changes to `throttle-landing` and verify GitHub Pages.

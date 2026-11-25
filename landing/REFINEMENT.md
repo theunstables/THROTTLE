@@ -6,7 +6,7 @@
 - [x] Native POST to the existing Google Form, with Google supplying the only success confirmation; no opaque-fetch success claim.
 - [x] Email-only and feedback-plus-consent labelled tests both received Google's recorded-response confirmation.
 - [x] Browser validation and responsive checks passed, including real Google confirmations for both submission scenarios and no mobile overflow.
-- [ ] Publish only landing files to throttle-landing and verify deployment.
+- [x] Published only landing files to throttle-landing and verified the live simplified form, its Google action and all assets.
 
 Google Form audit (25 November 2026): the owner removed Name, City, Age and Motorcycle questions. The remaining public questions are Feedback or Suggestions (`entry.1393558069`, optional) and Stay Connected (`entry.1549883233`, optional). Respondent-input email uses `emailAddress` and is required. The consent POST value must exactly match Google's existing checkbox wording; the landing page shows shorter supporting copy without changing that mapped value.
 
